@@ -1,7 +1,5 @@
 package org.koreait;
 
-import org.koreait.util.Util;
-import java.time.LocalDateTime;
 import java.util.Map;
 
 public class Article {
