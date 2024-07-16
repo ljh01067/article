@@ -30,3 +30,4 @@ SET regDate = NOW(),
 
 SELECT *
 FROM article;
+select * from `member`;

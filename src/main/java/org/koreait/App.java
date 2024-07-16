@@ -1,43 +1,49 @@
 package org.koreait;
 
-import org.koreait.Controller.ArticleController;
-import org.koreait.Controller.MemberController;
-import java.sql.*;
+import org.koreait.container.Container;
+import org.koreait.controller.ArticleController;
+import org.koreait.controller.MemberController;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.Scanner;
 
 public class App {
-    static int rogi;
+
+    private Scanner sc;
+
+    public App() {
+        Container.init();
+        this.sc = Container.sc;
+    }
+
     public void run() {
-        Scanner sc = new Scanner(System.in);
+
+        System.out.println("==프로그램 시작==");
 
         while (true) {
             System.out.print("명령어 > ");
             String cmd = sc.nextLine().trim();
-
             Connection conn = null;
-
             try {
                 Class.forName("org.mariadb.jdbc.Driver");
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
-
             String url = "jdbc:mariadb://127.0.0.1:3306/AM_JDBC_2024_07?useUnicode=true&characterEncoding=utf8&autoReconnect=true&serverTimezone=Asia/Seoul";
-
             try {
                 conn = DriverManager.getConnection(url, "root", "");
 
-                int actionResult = action(conn, sc, cmd);
+                Container.conn = conn;
+
+                int actionResult = action(cmd);
 
                 if (actionResult == -1) {
                     System.out.println("==프로그램 종료==");
                     sc.close();
                     break;
                 }
-                if (actionResult == 0){
-                    continue;
-                }
-
             } catch (SQLException e) {
                 System.out.println("에러 1 : " + e);
             } finally {
@@ -52,33 +58,37 @@ public class App {
         }
     }
 
-    private int action(Connection conn, Scanner sc, String cmd) throws SQLException {
+        private int action(String cmd) {
 
-        if (cmd.equals("exit")) {
-            return -1;
+            if (cmd.equals("exit")) {
+                return -1;
+            }
+
+
+            MemberController memberController = Container.memberController;
+            ArticleController articleController = Container.articleController;
+
+                if (cmd.equals("member logout")) {
+                    memberController.logout();
+                } else if (cmd.equals("member profile")) {
+                    memberController.showProfile();
+                } else if (cmd.equals("member login")) {
+                    memberController.login();
+                } else if (cmd.equals("member join")) {
+                    memberController.doJoin();
+                } else if (cmd.equals("article write")) {
+                    articleController.doWrite();
+                } else if (cmd.startsWith("article list")) {
+                    articleController.showList(cmd);
+                } else if (cmd.startsWith("article modify")) {
+                    articleController.doModify(cmd);
+                } else if (cmd.startsWith("article detail")) {
+                    articleController.showDetail(cmd);
+                } else if (cmd.startsWith("article delete")) {
+                    articleController.doDelete(cmd);
+                } else {
+                    System.out.println("사용할 수 없는 명령어");
+                }
+                return 0;
+            }
         }
-        MemberController memberController = new MemberController(sc, conn);
-        ArticleController articleController = new ArticleController(conn, sc);
-        String[] cmdBits = cmd.split(" ");
-        if (cmdBits.length == 1) {
-            System.out.println("명령어 확인해");
-            return 0;
-        }
-        String action = cmd.split(" ")[0];
-        String actionMethodName = cmd.split(" ")[1];
-        if (action.equals("member")) {
-            memberController.doAction(cmd,actionMethodName);
-        } else if (action.equals("article")) {
-            articleController.doAction(cmd,actionMethodName);
-        } else if(action.equals("member")||action.equals("article") == false){
-            System.out.println("명령어 오류");
-        }
-        return 0;
-    }
-    public static void setlogi(){
-        rogi++;
-    }
-    public static int getlogi(){
-        return rogi;
-    }
-}
